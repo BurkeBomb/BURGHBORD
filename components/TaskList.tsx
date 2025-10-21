@@ -15,21 +15,24 @@ type Task = {
   tags: string[];
 };
 
-export default function TaskList() {
+export default function TaskList({ refreshToken = 0 }: { refreshToken?: number }) {
   const [items, setItems] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
+    setError(null);
     const supabase = supabaseBrowser();
     const query = supabase.from('v_tasks_browser').select('*').order('created_at', { ascending: false });
     const { data, error } = await query;
     if (!error && data) setItems(data as any);
+    if (error) setError(error.message);
     setLoading(false);
   }
 
-  useEffect(()=>{ load(); }, []);
+  useEffect(()=>{ load(); }, [refreshToken]);
 
   async function updateStatus(id: string, status: string) {
     const supabase = supabaseBrowser();
@@ -51,6 +54,7 @@ export default function TaskList() {
       </div>
 
       {loading && <p>Loading...</p>}
+      {!loading && error && <p className="text-red-300">{error}</p>}
       {!loading && items
         .filter(t => statusFilter==='ALL' ? true : t.status===statusFilter)
         .map(t => (
