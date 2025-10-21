@@ -23,6 +23,7 @@ declare
 begin
   select id into v_tag_id from public.tags where name = tag_name;
   if v_tag_id is not null then
-    delete from public.task_tags where task_id = task_id and tag_id = v_tag_id;
+    delete from public.task_tags tt
+    where tt.task_id = fn_untag_task.task_id and tt.tag_id = v_tag_id;
   end if;
 end$$;
